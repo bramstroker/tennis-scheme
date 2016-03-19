@@ -16,7 +16,8 @@ class CombinationUtils
         if ($start_i == sizeof($array)-1) {
             array_push($results, $array);
         }
-        for ($i = $start_i; $i<sizeof($array); $i++) {
+        $count = sizeof($array);
+        for ($i = $start_i; $i < $count; $i++) {
             //Swap array value at $i and $start_i
             $t = $array[$i]; $array[$i] = $array[$start_i]; $array[$start_i] = $t;
 
@@ -47,39 +48,4 @@ class CombinationUtils
             return $return;
         }
     }
-
-    public static function &permuteUnique2($items) {
-        sort($items);
-        $size = count($items);
-        $return = [];
-        while (true) {
-            $return[] = $items;
-            $invAt = $size - 2;
-            for (;;$invAt--) {
-                if ($invAt < 0) {
-                    break 2;
-                }
-                if ($items[$invAt] < $items[$invAt + 1]) {
-                    break;
-                }
-            }
-            $swap1Num = $items[$invAt];
-            $inv2At = $size - 1;
-            while ($swap1Num >= $items[$inv2At]) {
-                $inv2At--;
-            }
-            $items[$invAt] = $items[$inv2At];
-            $items[$inv2At] = $swap1Num;
-            $reverse1 = $invAt + 1;
-            $reverse2 = $size - 1;
-            while ($reverse1 < $reverse2) {
-                $temp = $items[$reverse1];
-                $items[$reverse1] = $items[$reverse2];
-                $items[$reverse2] = $temp;
-                $reverse1++;
-                $reverse2--;
-            }
-        }
-        return $return;
-    }
-} 
+}

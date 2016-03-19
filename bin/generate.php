@@ -77,20 +77,15 @@ $schemeData = $generator->generate($options);
 $exporter = new ExcelExporter($phpExcel);
 $exporter->export($schemeData, ['filename' => 'tennis' . uniqid() . '.xls']);
 
-debugDumpPlayerCounts($schemeData);
-
-function debugDumpPlayerCounts($schemeData)
-{
-    $playerCounts = [];
-    foreach ($schemeData->getRounds() as $round) {
-        foreach ($schemeData->getPlayersForRound($round) as $player) {
-            if (!isset($playerCounts[$player->getName()])) {
-                $playerCounts[$player->getName()] = 0;
-            }
-            $playerCounts[$player->getName()]++;
+$playerCounts = [];
+foreach ($schemeData->getRounds() as $round) {
+    foreach ($schemeData->getPlayersForRound($round) as $player) {
+        if (!isset($playerCounts[$player->getName()])) {
+            $playerCounts[$player->getName()] = 0;
         }
+        $playerCounts[$player->getName()]++;
     }
-    foreach ($playerCounts as $name => $count) {
-        printf("%s: %d\n", $name, $count);
-    }
+}
+foreach ($playerCounts as $name => $count) {
+    printf("%s: %d\n", $name, $count);
 }

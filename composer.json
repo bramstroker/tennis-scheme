@@ -1,4 +1,5 @@
 {
+    "name": "stroker/tennis-scheme",
     "require": {
         "phpoffice/phpexcel": "~1.8",
         "najidev/permutation": "~1.0",

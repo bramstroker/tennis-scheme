@@ -88,4 +88,4 @@ class PermutationLoader
         }
         return $return;
     }
-} 
+}

@@ -8,10 +8,7 @@
 
 namespace StrokerTennis\SchemeGenerator;
 
-use DatePeriod;
 use DateTime;
-use PHPExcel;
-use PHPExcel_IOFactory;
 use StrokerTennis\Model\Match;
 use StrokerTennis\Model\Team;
 use StrokerTennis\Permutation\PermutationLoader;
@@ -146,4 +143,4 @@ class SchemeGenerator implements SchemeGeneratorInterface
         }
         return $playersForThisRound;
     }
-} 
+}
