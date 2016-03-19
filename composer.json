@@ -1,5 +1,9 @@
 {
     "name": "stroker/tennis-scheme",
+    "description": "PHP Library for generating schemes for internal weekly competition",
+    "type": "library",
+    "homepage": "https://github.com/bramstroker/tennis-scheme",
+    "license": "MIT",
     "require": {
         "phpoffice/phpexcel": "~1.8",
         "najidev/permutation": "~1.0",

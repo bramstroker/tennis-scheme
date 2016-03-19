@@ -6,6 +6,8 @@
  * Time: 10:23
  */
 
+use NajiDev\Permutation\PermutationIterator;
+
 $permutations = [];
 $permutationIterator = new PermutationIterator(range(0, 8));
 $permutations = [];
@@ -19,12 +21,6 @@ foreach ($permutationIterator as $permutation) {
         echo $i . PHP_EOL;
     }
 }
-
-//CombinationUtils::computePermutations($this->players, $permutations);
-//CombinationUtils::permuteUnique($this->players, [], $permutations);
-//permutations = CombinationUtils::permuteUnique2($this->players);
-
-
 
 echo 'mem usage: ' . memory_get_usage() . PHP_EOL;
 echo count($permutations) . ' permutations' . PHP_EOL;
