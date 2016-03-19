@@ -24,5 +24,4 @@ foreach ($permutationIterator as $permutation) {
 
 echo 'mem usage: ' . memory_get_usage() . PHP_EOL;
 echo count($permutations) . ' permutations' . PHP_EOL;
-//echo microtime(true) - $start . ' elapsed';
-//shuffle($permutations);
+
