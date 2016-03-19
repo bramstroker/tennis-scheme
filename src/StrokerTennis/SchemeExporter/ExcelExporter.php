@@ -17,17 +17,30 @@ use StrokerTennis\SchemeGenerator\SchemeData;
 
 class ExcelExporter implements SchemeExporterInterface
 {
+    /**
+     * @var PHPExcel
+     */
     protected $phpExcel;
 
+    /**
+     * @param PHPExcel $phpExcel
+     */
     public function __construct(PHPExcel $phpExcel)
     {
         $this->phpExcel = $phpExcel;
     }
 
-    public function export(SchemeData $schemeData, $params = [])
+    /**
+     * @param SchemeData $schemeData
+     * @param array $options
+     * @return void
+     * @throws \PHPExcel_Exception
+     * @throws \PHPExcel_Reader_Exception
+     */
+    public function export(SchemeData $schemeData, $options = [])
     {
         $dateFormatter = new IntlDateFormatter('nl', null, null);
-        $dateFormatter->setPattern('d - MMM');
+        $dateFormatter->setPattern(isset($options['dateformat']) ? $options['dateformat'] : 'd - MMM');
         $workSheet = $this->phpExcel->getActiveSheet();
         $row = 1;
         foreach ($schemeData->getRounds() as $round) {
@@ -44,6 +57,7 @@ class ExcelExporter implements SchemeExporterInterface
         }
 
         $objWriter = PHPExcel_IOFactory::createWriter($this->phpExcel, 'Excel5');
-        $objWriter->save($params['filename']);
+        $filename = isset($options['filename']) ? $options['filename'] : 'scheme.xls';
+        $objWriter->save($filename);
     }
 }
