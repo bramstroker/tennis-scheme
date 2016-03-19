@@ -6,10 +6,6 @@
  * Time: 6:07 PM
  */
 
-error_reporting(E_ALL);
-
-//ini_set('memory_limit', '4G');
-
 use StrokerTennis\Model\Player;
 use StrokerTennis\Permutation\PermutationLoader;
 use StrokerTennis\SchemeExporter\ExcelExporter;
@@ -22,6 +18,8 @@ include ('../vendor/autoload.php');
 
 $phpExcel = new PHPExcel();
 
+$generator = new SchemeGenerator(new PermutationLoader(__DIR__ . '/../data/permutation_files/'));
+
 $players = [
     new Player('Rien'),
     new Player('Willem-jan'),
@@ -30,44 +28,42 @@ $players = [
 ];
 
 $player = new Player('Adrie');
-$specifications[] = new CompositeOrSpecification(
+$generator->addSpecification(new CompositeOrSpecification(
     new AbsenceSpecification($player, new DateTime('2016-06-13'), new DateTime('2016-07-04')),
     new AbsenceSpecification($player, new DateTime('2016-08-29'), new DateTime('2016-09-12'))
-);
+));
 $players[] = $player;
 
 $player = new Player('Henk');
-$specifications[] = new AbsenceSpecification($player, new DateTime('2016-06-06'), new DateTime('2016-06-13'));
+$generator->addSpecification(new AbsenceSpecification($player, new DateTime('2016-06-06'), new DateTime('2016-06-13')));
 $players[] = $player;
 
 $player = new Player('Erik');
-$specifications[] = new AbsenceSpecification($player, new DateTime('2016-04-28'), new DateTime('2016-05-11'));
+$generator->addSpecification(new AbsenceSpecification($player, new DateTime('2016-04-28'), new DateTime('2016-05-11')));
 $players[] = $player;
 
 $player = new Player('Doss');
-$specifications[] = new CompositeOrSpecification(
+$generator->addSpecification(new CompositeOrSpecification(
     new AbsenceSpecification($player, new DateTime('2016-05-02'), new DateTime('2016-05-08')),
     new AbsenceSpecification($player, new DateTime('2016-07-18'), new DateTime('2016-08-07'))
-);
+));
 $players[] = $player;
 
 $player = new Player('Bart');
-$specifications[] = new AbsenceSpecification($player, new DateTime('2016-06-20'), new DateTime('2016-06-27'));
+$generator->addSpecification(new AbsenceSpecification($player, new DateTime('2016-06-20'), new DateTime('2016-06-27')));
 $players[] = $player;
 
 $player = new Player('Luc');
-$specifications[] = new AbsenceSpecification($player, new DateTime('2016-09-10'), new DateTime('2016-09-25'));
+$generator->addSpecification(new AbsenceSpecification($player, new DateTime('2016-09-10'), new DateTime('2016-09-25')));
 $players[] = $player;
 
 $player = new Player('Inge');
-$specifications[] = new CompositeOrSpecification(
+$generator->addSpecification(new CompositeOrSpecification(
     new AbsenceSpecification($player, new DateTime('2016-04-18'), new DateTime('2016-04-19')),
     new AbsenceSpecification($player, new DateTime('2016-05-09'), new DateTime('2016-05-16')),
     new AbsenceSpecification($player, new DateTime('2016-07-18'), new DateTime('2016-08-07'))
-);
+));
 $players[] = $player;
-
-$generator = new SchemeGenerator(new PermutationLoader(__DIR__ . '/../data/permutation_files/'), $specifications);
 
 $options = new SchemeGeneratorOptions(
     new DatePeriod(new DateTime( '2016-03-07' ), new DateInterval('P7D'), new DateTime( '2016-09-21' )),
@@ -79,4 +75,22 @@ $options->setExcludeDates([new DateTime('2016-03-28'), new DateTime('2016-05-16'
 $schemeData = $generator->generate($options);
 
 $exporter = new ExcelExporter($phpExcel);
-$exporter->export($schemeData, ['filename' => 'tennis.xls']);
+$exporter->export($schemeData, ['filename' => 'tennis' . uniqid() . '.xls']);
+
+debugDumpPlayerCounts($schemeData);
+
+function debugDumpPlayerCounts($schemeData)
+{
+    $playerCounts = [];
+    foreach ($schemeData->getRounds() as $round) {
+        foreach ($schemeData->getPlayersForRound($round) as $player) {
+            if (!isset($playerCounts[$player->getName()])) {
+                $playerCounts[$player->getName()] = 0;
+            }
+            $playerCounts[$player->getName()]++;
+        }
+    }
+    foreach ($playerCounts as $name => $count) {
+        printf("%s: %d\n", $name, $count);
+    }
+}

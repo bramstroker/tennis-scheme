@@ -9,6 +9,7 @@
 namespace StrokerTennis\SchemeExporter;
 
 
+use IntlDateFormatter;
 use PHPExcel;
 use PHPExcel_IOFactory;
 use StrokerTennis\Model\Match;
@@ -25,6 +26,8 @@ class ExcelExporter implements SchemeExporterInterface
 
     public function export(SchemeData $schemeData, $params = [])
     {
+        $dateFormatter = new IntlDateFormatter('nl', null, null);
+        $dateFormatter->setPattern('d - MMM');
         $workSheet = $this->phpExcel->getActiveSheet();
         $row = 1;
         foreach ($schemeData->getRounds() as $round) {
@@ -36,7 +39,7 @@ class ExcelExporter implements SchemeExporterInterface
                 $columns[] = $player->getName();
             }
             $workSheet->fromArray($columns, null, 'B' . $row);
-            $workSheet->setCellValue('A' . $row, $firstMatch->getDateTime()->format('d-m-Y'));
+            $workSheet->setCellValue('A' . $row, $dateFormatter->format($firstMatch->getDateTime()));
             $row++;
         }
 

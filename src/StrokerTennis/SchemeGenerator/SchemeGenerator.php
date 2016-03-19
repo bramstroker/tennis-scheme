@@ -15,9 +15,10 @@ use PHPExcel_IOFactory;
 use StrokerTennis\Model\Match;
 use StrokerTennis\Model\Team;
 use StrokerTennis\Permutation\PermutationLoader;
+use StrokerTennis\SchemeGenerator\Exception\NotEnoughPlayersException;
 use StrokerTennis\Specification\SpecificationInterface;
 
-class SchemeGenerator
+class SchemeGenerator implements SchemeGeneratorInterface
 {
     /** @var PermutationLoader */
     protected $permutationLoader;
@@ -30,14 +31,20 @@ class SchemeGenerator
 
     /**
      * @param PermutationLoader $permutationLoader
-     * @param array $specifications
      */
-    public function __construct(PermutationLoader $permutationLoader, $specifications = [])
+    public function __construct(PermutationLoader $permutationLoader)
     {
         $this->permutationLoader = $permutationLoader;
-        $this->specifications = $specifications;
     }
 
+    /**
+     * @param SpecificationInterface $specification
+     */
+    public function addSpecification(SpecificationInterface $specification)
+    {
+        $this->specifications[] = $specification;
+    }
+    
     /**
      * @param SchemeGeneratorOptions $options
      * @return SchemeData
@@ -115,7 +122,7 @@ class SchemeGenerator
      * @param SchemeGeneratorOptions $options
      * @param DateTime $date
      * @return array
-     * @throws \Exception
+     * @throws NotEnoughPlayersException
      */
     protected function selectPlayersForThisRound(SchemeGeneratorOptions $options, DateTime $date)
     {
@@ -135,7 +142,7 @@ class SchemeGenerator
         }
 
         if (count($playersForThisRound) < $options->getMaxPlayersPerRound()) {
-            throw new \Exception('Too few players');
+            throw new NotEnoughPlayersException(sprintf('Too few players on date %s', $date->format('d-m-Y')));
         }
         return $playersForThisRound;
     }
