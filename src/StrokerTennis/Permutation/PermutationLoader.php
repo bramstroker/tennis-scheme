@@ -40,7 +40,7 @@ class PermutationLoader
         if ($number > 8) { //Load permutations from cache (sample of 10000 permutations)
             $sampleFile = $this->dataPath . 'sample_' . $number . '.txt';
             foreach (file($sampleFile) as $line) {
-                $permutations[] = array_values(explode('-', $line));
+                $permutations[] = array_map('intval', array_values(explode('-', $line)));
             }
         } else { //Permute realtime
             $permutations = $this->permuteUnique(range(0, $number - 1));

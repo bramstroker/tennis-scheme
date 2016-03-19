@@ -6,7 +6,7 @@
  * Time: 20:06
  */
 
-namespace StrokerTennis\ValueObject;
+namespace StrokerTennis\Model;
 
 
 class Player

@@ -9,7 +9,15 @@
 namespace StrokerTennis\Specification;
 
 
+use DateTime;
+use StrokerTennis\Model\Player;
+
 interface SpecificationInterface
 {
-    public function isSatisfiedBy();
+    /**
+     * @param Player $player
+     * @param DateTime $dateTime
+     * @return mixed
+     */
+    public function isSatisfiedBy(Player $player, DateTime $dateTime);
 }
