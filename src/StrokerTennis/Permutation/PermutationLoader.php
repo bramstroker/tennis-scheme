@@ -9,6 +9,8 @@
 namespace StrokerTennis\Permutation;
 
 
+use drupol\phpermutations\Generators\Permutations;
+
 class PermutationLoader
 {
     /**
@@ -25,25 +27,39 @@ class PermutationLoader
     }
 
     /**
-     * @param int $number Number of items
+     * @param int $numPlayers
+     * @param int|null $length
      * @return array
-     * @throws \NotSupportException
+     * @throws \Exception
      */
-    public function getPermutations($number)
+    public function getPermutations(int $numPlayers, int $length = null)
     {
-        if ($number > 12) {
-            throw new \NotSupportException('More than 12 players are not allowed');
+        if ($length === null) {
+            $length = $numPlayers;
+        }
+
+        if ($numPlayers > 12) {
+            throw new \InvalidArgumentException('More than 12 players are not allowed');
         }
 
         $permutations = [];
 
-        if ($number > 8) { //Load permutations from cache (sample of 10000 permutations)
-            $sampleFile = $this->dataPath . 'sample_' . $number . '.txt';
-            foreach (file($sampleFile) as $line) {
-                $permutations[] = array_map('intval', array_values(explode('-', $line)));
+        if ($numPlayers > 8) { //Load permutations from cache (sample of 10000 permutations)
+            $file = $this->dataPath . 'permutations_' . $numPlayers . '_' . $length . '.txt';
+            if (!file_exists($file)) {
+                throw new \Exception('Permutation file ' . $file . ' not found. Generate using bin/generate_permuation_files.php');
             }
-        } else { //Permute realtime
-            $permutations = $this->permuteUnique(range(0, $number - 1));
+
+            $handle = fopen($file, "r");
+            if ($handle) {
+                while (($line = fgets($handle)) !== false) {
+                    $permutations[] = array_map('intval', array_values(explode('-', $line)));
+                }
+
+                fclose($handle);
+            }
+        } else {
+            $permutations = $this->permuteRealTime(range(0, $numPlayers - 1), $length);
         }
 
         shuffle($permutations);
@@ -51,41 +67,13 @@ class PermutationLoader
     }
 
     /**
-     * @param array $items
+     * @param array $dataSet
+     * @param int $length
      * @return array
      */
-    protected static function &permuteUnique($items) {
-        sort($items);
-        $size = count($items);
-        $return = [];
-        while (true) {
-            $return[] = $items;
-            $invAt = $size - 2;
-            for (;;$invAt--) {
-                if ($invAt < 0) {
-                    break 2;
-                }
-                if ($items[$invAt] < $items[$invAt + 1]) {
-                    break;
-                }
-            }
-            $swap1Num = $items[$invAt];
-            $inv2At = $size - 1;
-            while ($swap1Num >= $items[$inv2At]) {
-                $inv2At--;
-            }
-            $items[$invAt] = $items[$inv2At];
-            $items[$inv2At] = $swap1Num;
-            $reverse1 = $invAt + 1;
-            $reverse2 = $size - 1;
-            while ($reverse1 < $reverse2) {
-                $temp = $items[$reverse1];
-                $items[$reverse1] = $items[$reverse2];
-                $items[$reverse2] = $temp;
-                $reverse1++;
-                $reverse2--;
-            }
-        }
-        return $return;
+    protected function permuteRealTime(array $dataSet, int $length)
+    {
+        $permutations = new Permutations($dataSet, $length);
+        return $permutations->toArray();
     }
 }

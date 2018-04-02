@@ -6,22 +6,32 @@
  * Time: 10:23
  */
 
-use NajiDev\Permutation\PermutationIterator;
+require __DIR__ . '/../vendor/autoload.php';
 
-$permutations = [];
-$permutationIterator = new PermutationIterator(range(0, 8));
-$permutations = [];
+ini_set('memory_limit', '2G');
+
+$numPlayers = 8;
+$numSpots = 8;
+$folder = __DIR__ . '/../data/permutation_files/';
+$filename = 'permutations_' . $numPlayers . '_' . $numSpots . '.txt';
+
+$sourceDataSet = range(0, $numPlayers - 1);
+
+$permutations = new \drupol\phpermutations\Generators\Permutations($sourceDataSet, $numSpots);
+
+$data = '';
 $i = 0;
-$start = microtime(true);
-
-foreach ($permutationIterator as $permutation) {
-    file_put_contents('permutations.txt', join('-', $permutation) . "\n", FILE_APPEND);
+$lines = [];
+foreach ($permutations->generator() as $permutation) {
+    $data .= join('-', $permutation) . "\n";
     $i++;
-    if ($i % 10000 == 1) {
+    if ($i % 100000 == 1) {
         echo $i . PHP_EOL;
+        echo memory_get_usage() . PHP_EOL;
+        file_put_contents($folder . $filename, $data, FILE_APPEND);
+        $data = '';
     }
 }
 
-echo 'mem usage: ' . memory_get_usage() . PHP_EOL;
-echo count($permutations) . ' permutations' . PHP_EOL;
-
+//flush remainder
+file_put_contents($folder . $filename, $data, FILE_APPEND);

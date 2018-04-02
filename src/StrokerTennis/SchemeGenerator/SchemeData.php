@@ -20,6 +20,11 @@ class SchemeData
     protected $matchesPerRound = [];
 
     /**
+     * @var Team[]
+     */
+    protected $teams = [];
+
+    /**
      * @param Match $match
      */
     public function addMatch(Match $match)
@@ -28,6 +33,14 @@ class SchemeData
             $this->matchesPerRound[$match->getRound()] = [];
         }
         array_push($this->matchesPerRound[$match->getRound()], $match);
+    }
+
+    /**
+     * @param $teams
+     */
+    public function setTeams($teams)
+    {
+        $this->teams = $teams;
     }
 
     /**
@@ -65,6 +78,38 @@ class SchemeData
             }
         }
         return $players;
+    }
+
+    /**
+     * @return Match[]
+     */
+    protected function getAllMatches()
+    {
+        foreach ($this->matchesPerRound as $round => $matches) {
+            /** @var Match $match */
+            foreach ($matches as $match) {
+                yield $match;
+            }
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function getNumberOfMatchesPerTeam()
+    {
+        $countPerTeam = [];
+        foreach ($this->teams as $teamId => $team) {
+            $countPerTeam[$teamId] = 0;
+            foreach ($this->getAllMatches() as $match) {
+                if ($match->hasTeam($team)) {
+                    $countPerTeam[$teamId]++;
+                }
+            }
+        }
+
+        asort($countPerTeam);
+        return $countPerTeam;
     }
 
     /**

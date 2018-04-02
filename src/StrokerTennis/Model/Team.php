@@ -33,4 +33,24 @@ class Team
     {
         return count($this->players);
     }
+
+    /**
+     * @return string
+     */
+    public function getUniqueTeamId()
+    {
+        usort($this->players, function(Player $playerA, Player $playerB) {
+            return $playerA->getName() > $playerB->getName() ? 1 : -1;
+        });
+        return implode('|', array_map(function(Player $player) { return $player->getName(); }, $this->players));
+    }
+
+    /**
+     * @param Team $team
+     * @return bool
+     */
+    public function equals(Team $team)
+    {
+        return $this->getUniqueTeamId() == $team->getUniqueTeamId();
+    }
 }

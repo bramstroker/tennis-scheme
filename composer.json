@@ -10,7 +10,12 @@
         "zendframework/zend-expressive": "0.5.*",
         "zendframework/zend-servicemanager": "~2.6",
         "zendframework/zend-view": "~2.5",
-        "ext-intl" : "*"
+        "ext-intl" : "*",
+        "psr/log": "~1.0",
+        "monolog/monolog": "~1.23",
+        "alphazygma/combinatorics": "~1.0",
+        "drupol/phpermutations": "*"
+
     },
 
     "autoload": {

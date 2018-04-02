@@ -9,7 +9,9 @@
 namespace StrokerTennis\SchemeGenerator;
 
 use DateTime;
+use Psr\Log\LoggerInterface;
 use StrokerTennis\Model\Match;
+use StrokerTennis\Model\Player;
 use StrokerTennis\Model\Team;
 use StrokerTennis\Permutation\PermutationLoader;
 use StrokerTennis\SchemeGenerator\Exception\NotEnoughPlayersException;
@@ -26,12 +28,35 @@ class SchemeGenerator implements SchemeGeneratorInterface
     /** @var array */
     protected $totalCountPerPlayer = [];
 
+    /** @var array */
+    protected $iterationCountPerPlayer = [];
+
+    /** @var array */
+    private $permutations = [];
+
+    /** @var Player[] */
+    private $players = [];
+
+    /** @var Team[] */
+    private $teams = [];
+
+    /**
+     * @var SchemeData
+     */
+    private $schemeData;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
     /**
      * @param PermutationLoader $permutationLoader
+     * @param LoggerInterface $logger
      */
-    public function __construct(PermutationLoader $permutationLoader)
+    public function __construct(PermutationLoader $permutationLoader, LoggerInterface $logger)
     {
         $this->permutationLoader = $permutationLoader;
+        $this->logger = $logger;
     }
 
     /**
@@ -61,56 +86,123 @@ class SchemeGenerator implements SchemeGeneratorInterface
      */
     protected function doIteration(SchemeGeneratorOptions $options, $iteration = 0)
     {
-        $iterationCountPerPlayer = array_fill(0, count($options->getPlayers()), 0);
-        $players = $options->getPlayers();
-        $permutations = $this->permutationLoader->getPermutations(count($players));
-        $schemeData = new SchemeData();
+        $this->players = $options->getPlayers();
+
+        $this->schemeData = new SchemeData();
+        $this->schemeData->setTeams($this->createTeams());
+
+        $this->iterationCountPerPlayer = array_fill(0, count($this->players), 0);
+
+        $this->permutations = $this->permutationLoader->getPermutations(count($this->players), $options->getMaxPlayersPerRound());
+
         foreach($options->getDatePeriod() as $round => $date) {
 
             if (in_array($date, $options->getExcludeDates())) {
                 continue;
             }
 
-            $playerIndices = $this->selectPlayersForThisRound($options, $date);
+            $this->selectMatchesForRound($round, $options, $date);
 
-            $count = 0;
-            $match = new Match();
-            $team = new Team();
-            foreach ($permutations[$round] as $playerIndex) {
-                if (!isset($playerIndices[$playerIndex])) {
-                    continue;
+            $this->logger->info('Generating round ' . $round);
+        }
+
+        if ($iteration < 8 && (max($this->iterationCountPerPlayer) - min($this->iterationCountPerPlayer)) > 2) {
+            return $this->doIteration($options, ++$iteration);
+        }
+
+        return $this->schemeData;
+    }
+
+    /**
+     * @param int $round
+     * @param SchemeGeneratorOptions $options
+     * @param DateTime $date
+     * @param int $recursionCount
+     * @return mixed
+     */
+    protected function selectMatchesForRound(int $round, SchemeGeneratorOptions $options, DateTime $date, int $recursionCount = 0)
+    {
+        $players = $options->getPlayers();
+
+        $possiblePlayers = $this->selectPlayersForThisRound($options, $date);
+
+        $countsPerTeam = $this->schemeData->getNumberOfMatchesPerTeam();
+        $teamsWithMostMatches = [];
+        if (count($countsPerTeam) > 0 && max($countsPerTeam) > 0) {
+            $teamsWithMostMatches = array_keys($countsPerTeam, max($countsPerTeam));
+        }
+
+        $playersToInclude = [];
+        $playersToExclude = [];
+        if (max($this->totalCountPerPlayer) - min($this->totalCountPerPlayer) == 2) {
+            $playersToInclude = array_keys($this->totalCountPerPlayer, min($this->totalCountPerPlayer));
+            $playersToInclude = array_intersect($playersToInclude, $possiblePlayers);
+            $playersToInclude = array_slice($playersToInclude, 0, $options->getMaxPlayersPerRound() - 1);
+
+            $playersToExclude = array_keys($this->totalCountPerPlayer, max($this->totalCountPerPlayer));
+            $playersToExclude = array_slice($playersToExclude, 0, 1);
+        }
+
+        $selectedPermutation = current($this->permutations);
+        shuffle($this->permutations);
+        foreach ($this->permutations as $permutation) {
+
+            foreach ($playersToInclude as $includePlayer) {
+                if ($playersToInclude !== null && !in_array($includePlayer, $permutation)) {
+                    continue 2;
+                }
+            }
+
+            // Pick a permutation where all possible players apply
+            foreach ($permutation as $playerIndex) {
+                if (!isset($possiblePlayers[$playerIndex])) {
+                    continue 2;
                 }
 
-                if ($count % 4 == 0) {
-                    $match = new Match();
-                    $match->setRound($round);
-                    $match->setDateTime($date);
-                    $schemeData->addMatch($match);
+                if (count($playersToExclude) && in_array($playerIndex, $playersToExclude)) {
+                    continue 2;
                 }
-                if ($count % 2 == 0) {
-                    $team = new Team();
-                    $match->addTeam($team);
-                }
+            }
 
-                $team->addPlayer($players[$playerIndex]);
+            //@todo check team
 
-                $count++;
+            $selectedPermutation = $permutation;
+            break;
+        }
 
-                $iterationCountPerPlayer[$playerIndex]++;
+        $count = 0;
+        $matches = [];
+
+        foreach ($selectedPermutation as $playerIndex) {
+            if ($count % 4 == 0) {
+                $match = new Match();
+                $match->setRound($round);
+                $match->setDateTime($date);
+                $matches[] = $match;
+            }
+            if ($count % 2 == 0) {
+                $team = new Team();
+                $match->addTeam($team);
+            }
+
+            $team->addPlayer($players[$playerIndex]);
+
+            if ($team->getPlayerCount() == 2 && in_array($team->getUniqueTeamId(), $teamsWithMostMatches) && $recursionCount < 200) {
+                return $this->selectMatchesForRound($round, $options, $date, ++$recursionCount);
+            }
+
+            $count++;
+        }
+
+        /** @var Match $match */
+        foreach ($matches as $match) {
+            foreach ($match->getPlayers() as $player) {
+                $playerIndex = $this->lookupPlayerIndex($player);
+                $this->iterationCountPerPlayer[$playerIndex]++;
                 $this->totalCountPerPlayer[$playerIndex]++;
             }
+            $this->schemeData->addMatch($match);
         }
-
-        // Prevent too much resursion
-        if ($iteration > 10) {
-            return $schemeData;
-        }
-
-        if ((max($iterationCountPerPlayer) - min($iterationCountPerPlayer)) > 2) {
-            return $this->doIteration($options, $iteration + 1);
-        }
-
-        return $schemeData;
     }
 
     /**
@@ -133,14 +225,52 @@ class SchemeGenerator implements SchemeGeneratorInterface
                 }
             }
             $playersForThisRound[$playerIndex] = $playerIndex;
-            if (count($playersForThisRound) == $options->getMaxPlayersPerRound()) {
-                break;
-            }
         }
 
         if (count($playersForThisRound) < $options->getMaxPlayersPerRound()) {
             throw new NotEnoughPlayersException(sprintf('Too few players on date %s', $date->format('d-m-Y')));
         }
         return $playersForThisRound;
+    }
+
+    /**
+     * @param Player $playerToLookup
+     * @return int|null
+     */
+    protected function lookupPlayerIndex(Player $playerToLookup)
+    {
+        foreach ($this->players as $index => $player) {
+            if ($player === $playerToLookup) {
+                return $index;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Create all teams
+     */
+    protected function createTeams()
+    {
+        foreach ($this->players as $playerA) {
+            foreach ($this->players as $playerB) {
+                if ($playerA === $playerB) {
+                    continue;
+                }
+                $team = new Team();
+                $team->addPlayer($playerA);
+                $team->addPlayer($playerB);
+                $this->teams[$team->getUniqueTeamId()] = $team;
+            }
+        }
+        return $this->teams;
+    }
+
+    /**
+     * @return Team[]
+     */
+    public function getTeams()
+    {
+        return $this->teams;
     }
 }

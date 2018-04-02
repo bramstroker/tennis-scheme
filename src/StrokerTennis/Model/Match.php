@@ -39,6 +39,32 @@ class Match
     }
 
     /**
+     * @param Team $team
+     * @return boolean
+     */
+    public function hasTeam(Team $team): bool
+    {
+        foreach ($this->teams as $searchTeam) {
+            if ($searchTeam->equals($team)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return \Generator
+     */
+    public function getPlayers()
+    {
+        foreach ($this->teams as $team) {
+            foreach ($team->getPlayers() as $player) {
+                yield $player;
+            }
+        }
+    }
+
+    /**
      * @return DateTime
      */
     public function getDateTime()

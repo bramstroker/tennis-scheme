@@ -23,7 +23,7 @@ class AbsenceSpecification implements SpecificationInterface
     /** @var Player */
     protected $player;
 
-    public function __construct(Player $player, DateTime $startDate, DateTime $endDate)
+    public function __construct(Player $player, DateTime $startDate, DateTime $endDate = null)
     {
         $this->player = $player;
         $this->startDate = $startDate;
@@ -39,6 +39,10 @@ class AbsenceSpecification implements SpecificationInterface
     {
         if ($this->player !== $player) {
             return false;
+        }
+
+        if ($this->endDate == null && $dateTime == $this->startDate) {
+            return true;
         }
 
         if ($dateTime >= $this->startDate && $dateTime <= $this->endDate) {
