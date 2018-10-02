@@ -41,7 +41,7 @@ class AbsenceSpecification implements SpecificationInterface
             return false;
         }
 
-        if ($this->endDate == null && $dateTime == $this->startDate) {
+        if ($this->endDate === null && $dateTime == $this->startDate) {
             return true;
         }
 

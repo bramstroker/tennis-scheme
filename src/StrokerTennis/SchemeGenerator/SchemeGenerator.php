@@ -22,9 +22,6 @@ class SchemeGenerator implements SchemeGeneratorInterface
     /** @var PermutationLoader */
     protected $permutationLoader;
 
-    /** @var SpecificationInterface[] */
-    protected $specifications = [];
-
     /** @var array */
     protected $totalCountPerPlayer = [];
 
@@ -57,14 +54,6 @@ class SchemeGenerator implements SchemeGeneratorInterface
     {
         $this->permutationLoader = $permutationLoader;
         $this->logger = $logger;
-    }
-
-    /**
-     * @param SpecificationInterface $specification
-     */
-    public function addSpecification(SpecificationInterface $specification)
-    {
-        $this->specifications[] = $specification;
     }
     
     /**
@@ -219,7 +208,7 @@ class SchemeGenerator implements SchemeGeneratorInterface
         $players = $options->getPlayers();
         asort($this->totalCountPerPlayer);
         foreach ($this->totalCountPerPlayer as $playerIndex => $count) {
-            foreach ($this->specifications as $spec) {
+            foreach ($options->getSpecifications() as $spec) {
                 if ($spec->isSatisfiedBy($players[$playerIndex], $date)) {
                     continue 2;
                 }

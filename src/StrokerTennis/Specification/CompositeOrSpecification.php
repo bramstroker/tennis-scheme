@@ -13,25 +13,33 @@ use StrokerTennis\Model\Player;
 
 class CompositeOrSpecification implements SpecificationInterface
 {
-    /** @var SpecificationInterface */
-    protected $left;
+    /**
+     * @var SpecificationInterface[]
+     */
+    private $specifications;
 
-    /** @var SpecificationInterface */
-    protected $right;
-
-    public function __construct(SpecificationInterface $left, SpecificationInterface $right)
+    /**
+     * @param SpecificationInterface ...$specifications
+     */
+    public function __construct(SpecificationInterface ...$specifications)
     {
-        $this->left = $left;
-        $this->right = $right;
+        $this->specifications = $specifications;
     }
 
     /**
+     * if at least one specification is true, return true, else return false
+     *
      * @param Player $player
      * @param DateTime $dateTime
-     * @return mixed
+     * @return bool
      */
-    public function isSatisfiedBy(Player $player, DateTime $dateTime)
+    public function isSatisfiedBy(Player $player, DateTime $dateTime): bool
     {
-        return ($this->left->isSatisfiedBy($player, $dateTime) || $this->right->isSatisfiedBy($player, $dateTime));
+        foreach ($this->specifications as $specification) {
+            if ($specification->isSatisfiedBy($player, $dateTime)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

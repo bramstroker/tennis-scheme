@@ -10,7 +10,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 ini_set('memory_limit', '2G');
 
-$numPlayers = 8;
+$numPlayers = 12;
 $numSpots = 8;
 $folder = __DIR__ . '/../data/permutation_files/';
 $filename = 'permutations_' . $numPlayers . '_' . $numSpots . '.txt';

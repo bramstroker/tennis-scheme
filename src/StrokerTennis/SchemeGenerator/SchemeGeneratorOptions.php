@@ -29,18 +29,21 @@ class SchemeGeneratorOptions
     protected $maxPlayersPerRound;
     
     /** @var SpecificationInterface[] */
-    protected $specifications;
-    
-    public function __construct(DatePeriod $datePeriod, $players = [])
+    protected $specifications = [];
+
+    /**
+     * SchemeGeneratorOptions constructor.
+     * @param DatePeriod $datePeriod
+     */
+    public function __construct(DatePeriod $datePeriod)
     {
         $this->datePeriod = $datePeriod;
-        $this->players = $players;
     }
 
     /**
      * @return Player[]
      */
-    public function getPlayers()
+    public function getPlayers(): array
     {
         return $this->players;
     }
@@ -48,7 +51,7 @@ class SchemeGeneratorOptions
     /**
      * @return DatePeriod
      */
-    public function getDatePeriod()
+    public function getDatePeriod(): DatePeriod
     {
         return $this->datePeriod;
     }
@@ -56,35 +59,77 @@ class SchemeGeneratorOptions
     /**
      * @return int
      */
-    public function getMaxPlayersPerRound()
+    public function getMaxPlayersPerRound(): int
     {
         if ($this->maxPlayersPerRound === null) {
-            return count($this->players);
+            return \count($this->players);
         }
         return $this->maxPlayersPerRound;
     }
 
     /**
      * @param int $maxPlayersPerRound
+     * @return SchemeGeneratorOptions
      */
-    public function setMaxPlayersPerRound($maxPlayersPerRound)
+    public function setMaxPlayersPerRound($maxPlayersPerRound): SchemeGeneratorOptions
     {
         $this->maxPlayersPerRound = $maxPlayersPerRound;
+        return $this;
     }
 
     /**
      * @param DateTime[] $excludeDates
+     * @return SchemeGeneratorOptions
      */
-    public function setExcludeDates($excludeDates)
+    public function setExcludeDates($excludeDates): SchemeGeneratorOptions
     {
         $this->excludeDates = $excludeDates;
+        return $this;
     }
 
     /**
      * @return \DateTime[]
      */
-    public function getExcludeDates()
+    public function getExcludeDates(): array
     {
         return $this->excludeDates;
+    }
+
+    /**
+     * @param SpecificationInterface $specification
+     * @return SchemeGeneratorOptions
+     */
+    public function addSpecification(SpecificationInterface $specification): SchemeGeneratorOptions
+    {
+        $this->specifications[] = $specification;
+        return $this;
+    }
+
+    /**
+     * @return SpecificationInterface[]
+     */
+    public function getSpecifications(): array
+    {
+        return $this->specifications;
+    }
+
+    /**
+     * @param Player[] $players
+     * @return SchemeGeneratorOptions
+     */
+    public function setPlayers(array $players): SchemeGeneratorOptions
+    {
+        $this->players = $players;
+        return $this;
+    }
+
+    /**
+     * @param Player $player
+     * @return SchemeGeneratorOptions
+     */
+    public function addPlayer(Player $player): SchemeGeneratorOptions
+    {
+        $this->players[] = $player;
+        return $this;
     }
 }
