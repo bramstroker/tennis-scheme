@@ -10,26 +10,13 @@ namespace StrokerTennis\SchemeExporter;
 
 
 use IntlDateFormatter;
-use PHPExcel;
-use PHPExcel_IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use StrokerTennis\Model\Match;
 use StrokerTennis\SchemeGenerator\SchemeData;
 
 class ExcelExporter implements SchemeExporterInterface
 {
-    /**
-     * @var PHPExcel
-     */
-    protected $phpExcel;
-
-    /**
-     * @param PHPExcel $phpExcel
-     */
-    public function __construct(PHPExcel $phpExcel)
-    {
-        $this->phpExcel = $phpExcel;
-    }
-
     /**
      * @param SchemeData $schemeData
      * @param array $options
@@ -39,25 +26,28 @@ class ExcelExporter implements SchemeExporterInterface
      */
     public function export(SchemeData $schemeData, $options = [])
     {
+        $spreadsheet = new Spreadsheet();
+
         $dateFormatter = new IntlDateFormatter('nl', null, null);
-        $dateFormatter->setPattern(isset($options['dateformat']) ? $options['dateformat'] : 'd - MMM');
-        $workSheet = $this->phpExcel->getActiveSheet();
+        $dateFormatter->setPattern($options['dateformat'] ?? 'd - MMM');
+        $workSheet = $spreadsheet->getActiveSheet();
         $row = 1;
         foreach ($schemeData->getRounds() as $round) {
             $columns = [];
             /** @var Match $firstMatch */
             $firstMatch = current($schemeData->getMatchesForRound($round));
+            $workSheet->setCellValue('A' . $row, $dateFormatter->format($firstMatch->getDateTime()));
 
             foreach ($schemeData->getPlayersForRound($round) as $player) {
                 $columns[] = $player->getName();
             }
             $workSheet->fromArray($columns, null, 'B' . $row);
-            $workSheet->setCellValue('A' . $row, $dateFormatter->format($firstMatch->getDateTime()));
+
             $row++;
         }
 
-        $objWriter = PHPExcel_IOFactory::createWriter($this->phpExcel, 'Excel5');
-        $filename = isset($options['filename']) ? $options['filename'] : 'scheme.xls';
-        $objWriter->save($filename);
+        $writer = new Xlsx($spreadsheet);
+        $filename = $options['filename'] ?? 'scheme.xls';
+        $writer->save($filename);
     }
 }

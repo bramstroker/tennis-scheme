@@ -6,6 +6,7 @@
  * Time: 6:07 PM
  */
 
+use Monolog\Logger;
 use StrokerTennis\Factory\SchemeGeneratorOptionsFactory;
 use StrokerTennis\Permutation\PermutationLoader;
 use StrokerTennis\SchemeExporter\ExcelExporter;
@@ -15,18 +16,16 @@ include ('../vendor/autoload.php');
 
 ini_set('memory_limit', '2G');
 
-$phpExcel = new PHPExcel();
-
-$logger = new \Monolog\Logger('log', [new \Monolog\Handler\StreamHandler('php://stdout')]);
+$logger = new Logger('log', [new \Monolog\Handler\StreamHandler('php://stdout')]);
 
 $generator = new SchemeGenerator(new PermutationLoader(__DIR__ . '/../data/permutation_files/'), $logger);
 
-$options = SchemeGeneratorOptionsFactory::createOptionsFromJson(file_get_contents(__DIR__ . '/../definition/2018_najaar.json'));
+$options = SchemeGeneratorOptionsFactory::createOptionsFromJson(file_get_contents(__DIR__ . '/../definition/2021_najaar.json'));
 
 $schemeData = $generator->generate($options);
 
-$exporter = new ExcelExporter($phpExcel);
-$exporter->export($schemeData, ['filename' => __DIR__ . '/../export/tennis' . uniqid() . '.xls']);
+$exporter = new ExcelExporter();
+$exporter->export($schemeData, ['filename' => __DIR__ . '/../export/tennis' . uniqid() . '.xlsx']);
 
 $playerCounts = [];
 foreach ($schemeData->getRounds() as $round) {
